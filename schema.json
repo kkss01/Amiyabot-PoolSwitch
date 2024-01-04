@@ -1,0 +1,11 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "showPoolList": {
+            "title": "允许使用卡池编号和名称切换",
+            "description": "关闭后不显示卡池列表",
+            "type": "boolean"
+        }
+    }
+}

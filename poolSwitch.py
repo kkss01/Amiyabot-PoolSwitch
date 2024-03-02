@@ -41,7 +41,7 @@ class Config:
 
 bot = PoolSwitchPluginInstance(
     name='卡池智能切换',
-    version='1.8.3',
+    version='1.8.6',
     plugin_id='kkss-pool-switch',
     plugin_type='',
     description='让兔兔更聪明地切换卡池',
@@ -95,8 +95,7 @@ async def get_description():
     desc += f'# 使用说明  \n'
     desc += f'以下指令均可随时使用, 无需在切换前查看卡池列表\n'
     desc += f'<br>&emsp;( 指令中的括号 [ ] 不需要输入 )\n'
-    desc += f'- <font color=Green>**`{pk}卡池[干员名]` 可直接切换到该干员首次up的卡池 <br>**</font> \n'
-    desc += f'&emsp;( 支持别名 )\n'
+    desc += f'- <font color=Green>**`{pk}卡池[干员名]` 可直接切换到该干员首次up的卡池 ( 支持别名 )<br>**</font> \n'
     desc += f'- `{pk}最新卡池` 可切换最新卡池 **(不包含常驻/联合/中坚寻访)** \n'
     desc += f'- `{pk}随机卡池` 可随机切换卡池 \n'
     desc += f'- `{pk}常驻卡池` 可切换到常驻寻访 \n'
@@ -114,8 +113,6 @@ async def get_description():
 
 async def get_pool_menu() -> str:
     text = '这是可更换的卡池列表：\n\n'
-    pools = []
-    max_len = 0
     all_pools: List[Pool] = Pool.select()
     
     text += '|卡池名称|卡池名称|卡池名称|卡池名称|\n|----|----|----|----|\n'
@@ -216,35 +213,17 @@ async def _(data: Message):
         change_res = gacha.main.change_pool(item=targetPool, user_id=data.user_id)
         if change_res[1]:
             return Chain(data).image(change_res[1]).text_image(change_res[0])
-        return Chain(data).text_image(change_res[0])
+        else:
+            return Chain(data).text_image(change_res[0])
     
     if search:
         text = f'没有找到符合条件的卡池: "{search}"    \n' \
-                '可能的原因:  \n' \
-                '干员名包含错别字  \n' \
-                '该干员没有up的卡池  \n' \
-                '该卡池已过期或未更新'
+                '可能是干员名包含错别字  \n' \
+                '或该干员没有up的卡池  \n' \
+                '或该卡池未更新/已过期'
 
-    source = type(data.instance)
-    if source is CQHttpBotInstance:
-        forward = CQHTTPForwardMessage(data)
-    elif source is MiraiBotInstance:
-        forward = MiraiForwardMessage(data)
-    else:
-        chain = Chain(data).text(text).markdown(await get_description())
-        if Config.show_pool_list:
-            chain.markdown(await get_pool_menu())
-        return chain
-    
-    if search:
-        await forward.add_message(Chain().text(text),
-                                    user_id=data.instance.appid, nickname='提示')    
-    
-    chain = Chain().markdown(await get_description())
-
+    chain = Chain(data).text(text).markdown(await get_description())
     if Config.show_pool_list:
         chain.markdown(await get_pool_menu())
-
-    await forward.add_message(chain, user_id=data.user_id, nickname='卡池列表')
-
-    await forward.send()
+    return chain
+    
